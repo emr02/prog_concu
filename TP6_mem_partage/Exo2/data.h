@@ -1,0 +1,2 @@
+#define BUFFERSIZE 5
+#define BUFFERKEY 5681

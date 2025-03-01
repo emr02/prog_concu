@@ -1,4 +1,6 @@
-﻿## GCC
+﻿ctrl + shift + v
+
+## GCC
 
 `gcc -Wall -Wextra -g hello.c -o hello`
 `-Wall` : Ajout de warnings de base
@@ -291,3 +293,34 @@ envoie un signal **SIGALRM** au pour de n secondes.
 Si alarm est appelé 2 fois, la deuxième reset le premier et renvoie le temps qu'il restait avant l'envoi du signal.
 
 
+## exemple
+
+La raison pour laquelle nous redirigeons la sortie standard (STDOUT) et non l'entrée standard (STDIN) dans ce contexte est que nous voulons capturer la sortie de la commande `du -sh /usr/share` et la transmettre à un autre processus.
+
+Voici une explication détaillée :
+
+1. **Sortie standard (STDOUT)** :
+   - La sortie standard est utilisée par les programmes pour envoyer des données de sortie, comme les résultats d'une commande.
+   - Dans notre cas, nous voulons capturer ce que `du -sh /usr/share` produit comme sortie.
+   - En redirigeant la sortie standard vers le pipe, nous permettons à un autre processus de lire cette sortie.
+
+2. **Entrée standard (STDIN)** :
+   - L'entrée standard est utilisée par les programmes pour recevoir des données d'entrée.
+   - Si nous redirigions l'entrée standard, nous serions en train de fournir des données à la commande `du -sh /usr/share`, ce qui n'est pas nécessaire dans ce cas.
+   - Nous n'avons pas besoin de fournir des données d'entrée à `du -sh /usr/share`; nous avons seulement besoin de capturer sa sortie.
+
+Voici un schéma simplifié pour illustrer ce concept :
+
+```
+Processus enfant (commande `du -sh /usr/share`)
+    |
+    |--(sortie standard redirigée vers le pipe)-->
+    |
+Pipe
+    |
+    |--(lecture de la sortie standard)-->
+    |
+Processus parent (ou un autre processus)
+```
+
+En résumé, nous redirigeons la sortie standard (STDOUT) parce que nous voulons capturer et transmettre la sortie de la commande `du -sh /usr/share` à un autre processus via le pipe. L'entrée standard (STDIN) n'est pas pertinente dans ce cas car nous ne fournissons pas de données d'entrée à la commande.
