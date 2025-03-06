@@ -1,61 +1,73 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-int main()
-{
-    int tube[2];
-    int tube2[2];
-    int res = pipe(tube); 
-    int res2 = pipe(tube2);
-    if(res == -1){
+#include <string.h>
+#include <time.h>
+
+int main() {
+    int tube[2];  // Pipe père -> fils
+    int tube2[2]; // Pipe fils -> père
+    int n;        // Nombre saisi
+    char rep;     // Réponse (+, -, =)
+
+    // Création des pipes avec vérification
+    if (pipe(tube) == -1 || pipe(tube2) == -1) {
         perror("Création Pipe");
         exit(-1);
     }
-    if(res2 == -1){
-        perror("Création Pipe2");
+
+    int pid = fork();
+    if (pid == -1) {
+        perror("Erreur fork");
         exit(-1);
     }
-    if(fork()==0){
-        close(tube[1]);
-        close(tube2[0]);
-        int random = rand()%50;
-        int isFound = 0;
-        int response;
-        char retour = '=';
-        while (isFound == 0){
-            read(tube[0], &response, sizeof(int));
-            if(response == random){
-                isFound = 1;
-                retour = '=';
-                close(tube[0]);
-                close(tube2[1]);
-            }else if (response > random){
-                retour = '-';
-            }else{
-                retour = '+';
+
+    if (pid == 0) { // Processus fils
+        close(tube[1]);  // Ferme écriture tube
+        close(tube2[0]); // Ferme lecture tube2
+
+        srand(time(NULL));      // Initialise rand
+        int random = rand() % 50; // Nombre aléatoire 0-49
+
+        while (1) {
+            read(tube[0], &n, sizeof(int)); // Lit le nombre du père
+            if (n == random) {
+                rep = '=';
+            } else if (n > random) {
+                rep = '-';
+            } else {
+                rep = '+';
             }
-            write(tube2[1], &retour, sizeof(char));
+            write(tube2[1], &rep, sizeof(char)); // Envoie réponse au père
+            if (rep == '=') break; // Sort si trouvé
         }
-    }else{
+
         close(tube[0]);
         close(tube2[1]);
-        int number;
-        char res;
-        while (1)
-        {
-            printf("Entrez un nombre :\n");
-            scanf("%d", &number);
-            write(tube[1], &number, sizeof(int));
-            read(tube2[0], &res, sizeof(char));
-            if(res == '='){
-                printf("%d était le nombre à trouver\n", number);
-                close(tube[1]);
-                close(tube2[0]);
-                break;
-            }else{
-                printf("%c\n", res);
+        exit(0); // Termine le fils proprement
+    } else { // Processus père
+        close(tube[0]);  // Ferme lecture tube
+        close(tube2[1]); // Ferme écriture tube2
+
+        while (1) {
+            printf("Entre un nombre (0-49) : ");
+            scanf("%d", &n);
+            write(tube[1], &n, sizeof(int)); // Envoie au fils
+            read(tube2[0], &rep, sizeof(char)); // Lit réponse
+
+            // Affiche message en fonction de la réponse
+            if (rep == '+') {
+                printf("Le nombre est plus grand\n");
+            } else if (rep == '-') {
+                printf("Le nombre est plus petit\n");
+            } else if (rep == '=') {
+                printf("Bravo, tu as trouvé !\n");
+                break; // Sort si trouvé
             }
         }
+
+        close(tube[1]);
+        close(tube2[0]);
     }
     return 0;
 }

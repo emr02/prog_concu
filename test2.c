@@ -8,9 +8,9 @@
 int main(){
 
      int semid = sem_get(1);
-     int random = rand() % (5 - 3 + 1) + 3;
+     P(semid);
+     int random = rand() % 4 + 1;
      sleep(random);
-     printf("fini\n");
-     V(semid);
+     printf("fini 2\n");
      return 0;
 }

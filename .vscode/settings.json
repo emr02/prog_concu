@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "dijkstra.h": "c",
-        "shm.h": "c"
+        "shm.h": "c",
+        "unistd.h": "c",
+        "stdlib.h": "c"
     }
 }

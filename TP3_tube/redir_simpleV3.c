@@ -1,48 +1,53 @@
 #include <stdio.h>
 #include <unistd.h>
-#include <stdlib.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
-int main()
-{
-    int tube[2];
-    int tube2[2];
-    int res = pipe(tube);
-    int res2 = pipe(tube2);
-    if(res == -1){
-        perror("Création Pipe");
-        exit(-1);
+int main() {
+    int tube[2], tube2[2];
+
+    pipe(tube);
+    pipe(tube2);
+
+    if (fork() == 0) { // Premier fils : cut
+        close(tube[0]); // Ferme la lecture du premier tube
+        dup2(open("/etc/passwd", O_RDONLY), 0); // Redirige l'entrée standard vers /etc/passwd
+        dup2(tube[1], 1); // Redirige la sortie standard vers tube[1]
+        close(tube[1]); // Ferme l'écriture après duplication
+        execlp("cut", "cut", "-f", "1,3", "-d", ":", NULL);
+        perror("execlp cut");
+        exit(1);
     }
-    if(res2 == -1){
-        perror("Création Pipe2");
-        exit(-1);
-    }
-    if(fork()==0){
-        close(tube2[0]);
+
+    if (fork() == 0) { // Deuxième fils : sed
+        close(tube[1]); // Ferme l'écriture du premier tube
+        close(tube2[0]); // Ferme la lecture du second tube
+
+        dup2(tube[0], 0); // Lit depuis tube[0]
+        dup2(tube2[1], 1); // Écrit vers tube2[1]
+
+        close(tube[0]); // Ferme après duplication
         close(tube2[1]);
-        close(tube[0]);
-        int input = open("/etc/passwd",O_RDONLY);
-        dup2(input, 0);
-        close(tube[1]);
-        execlp("cut","cut", "-f", "1,3", "-d", ":", NULL);
-    }else{
-        if(fork()==0){
-            close(tube[1]);
-            close(tube2[0]);
-            dup2(tube[0], 0);
-            dup2(tube2[1], 1);
-            close(tube[0]);
-            close(tube2[1]);
-            execlp("sed", "sed", "s+^\\(.\\):\\(.*\\)+\2:\1+", NULL);
-        }else{
-            close(tube[0]);
-            close(tube[1]);
-            close(tube2[1]);
-            int input = open("./users",O_WRONLY | O_CREAT | O_TRUNC, 0644);
-            dup2(input, 1);
-            dup2(tube2[0], 0);
-            close(tube2[0]);
-            execlp("sort","sort", "-n", NULL);
-        }
+
+        execlp("sed", "sed", "-E", "s/^([^:]+):([^:]+)/\\2:\\1/", NULL);
+        perror("execlp sed");
+        exit(1);
     }
+
+    // Processus parent : sort
+    close(tube[0]);
+    close(tube[1]);
+    close(tube2[1]); // Ferme l'écriture du deuxième tube
+
+    int output = open("./users", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    dup2(tube2[0], 0); // Lit depuis tube2[0]
+    dup2(output, 1); // Écrit vers le fichier
+    close(tube2[0]);
+    close(output);
+
+    execlp("sort", "sort", "-n", NULL);
+    perror("execlp sort");
+    exit(1);
+
+    return 0;
 }

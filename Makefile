@@ -1,28 +1,27 @@
-# Nom du fichier source
-SRC = test.c
+CFLAGS=-Wall -Wextra -g
 
-# Nom de l'exécutable
-EXEC = test
+TARGETS=init test test2 clean
 
-# Compilateur
-CC = gcc
+all: $(TARGETS)
 
-# Options de compilation
-CFLAGS = -Wall -Wextra -pedantic
+init: init.o dijkstra.o
+	gcc $^ -o $@ $(LIBS)
 
-# Règle par défaut
-all: $(EXEC)
+test: test.o dijkstra.o
+	gcc $^ -o $@ $(LIBS)
 
-# Règle pour créer l'exécutable
-$(EXEC): $(SRC)
-	$(CC) $(CFLAGS) $(SRC) -o $(EXEC)
+test2: test2.o dijkstra.o
+	gcc $^ -o $@ $(LIBS)
 
-# Règle pour nettoyer les fichiers générés
-clean:
-	rm -f $(EXEC)
+clean: clean.o dijkstra.o
+	gcc $^ -o $@ $(LIBS)
 
-# Règle pour exécuter le programme
-run: $(EXEC)
-	./$(EXEC)
+dijkstra.o: dijkstra.h dijkstra.c
+init.o: dijkstra.h init.c
+test.o: dijkstra.h test.c
+test2.o: dijkstra.h test2.c
+clean.o: dijkstra.h clean.c
 
-.PHONY: all clean run
+
+clear:
+	rm *.o $(TARGETS)
