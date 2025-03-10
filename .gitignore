@@ -34,7 +34,7 @@
 *~
 .*.swp
 .*.swo
-.vscode/
+**/.vscode/
 .idea/
 
 # Build directories
