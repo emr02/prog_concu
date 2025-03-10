@@ -4,13 +4,6 @@
 #include <pthread.h>
 
 const int size = 1000;
-const int tailleRegions = 5;
-int coordonnesBase[3] = {0,0,0};
-
-struct pixels{
-	pthread_mutex_t mutex;
-	unsigned char *image;
-};
 
 static void calcul(int x, int y, unsigned char *pixel)
 {
@@ -62,6 +55,14 @@ static void calcul(int x, int y, unsigned char *pixel)
 		pixel[0]=pixel[1]=pixel[2]=0;
 }
 
+const int tailleRegions = 5;
+int coordonnesBase[3] = {0,0,0};
+
+struct pixels{
+	pthread_mutex_t mutex;
+	unsigned char *image;
+};
+
 void *generate(void* args){
 	struct pixels *argument = args;
 	while (1)
@@ -106,9 +107,6 @@ int main(int argc, char const *argv[])
 	unsigned char *image = malloc(3*size*size);
 	pthread_t thread[N];
 	struct pixels pixels[N];
-	for(int i = 0; i<N;i++){
-		
-	}
 
 	for(int i = 0; i<N;i++){
 		pixels[i].image = image;

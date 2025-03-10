@@ -94,3 +94,19 @@ int main(int argc, char **argv)
         pthread_join(conso[i],NULL);
     }
 }
+
+/*
+Utilisez un pointeur quand:
+La valeur peut changer pendant l'exécution et tous les threads doivent voir la nouvelle valeur
+La valeur est partagée entre plusieurs threads qui peuvent la modifier
+La ressource est trop volumineuse pour être copiée efficacement (comme un grand tableau)
+Utilisez une valeur directe quand:
+La valeur est constante pour ce thread et ne changera pas
+Chaque thread a besoin de sa propre copie indépendante
+La valeur est petite (comme un entier, un caractère, etc.)
+Dans votre cas de prodconso.c avec N
+Pour N dans votre code:
+
+Si N pouvait changer pendant l'exécution (peu probable): pointeur nécessaire
+Si N est une constante (votre cas): les deux approches fonctionnent
+*/
