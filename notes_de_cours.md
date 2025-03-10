@@ -324,3 +324,76 @@ Processus parent (ou un autre processus)
 ```
 
 En résumé, nous redirigeons la sortie standard (STDOUT) parce que nous voulons capturer et transmettre la sortie de la commande `du -sh /usr/share` à un autre processus via le pipe. L'entrée standard (STDIN) n'est pas pertinente dans ce cas car nous ne fournissons pas de données d'entrée à la commande.
+
+
+### Comprendre les barrières dans la programmation concurrente
+Les barrières vs les mutex
+Dans vos deux exemples de code, vous utilisez deux mécanismes de synchronisation différents :
+
+#### Mutex (dans test.c)
+Un mutex (mutual exclusion) est un verrou qui garantit l'accès exclusif à une ressource partagée :
+
+- Un seul thread peut détenir le mutex à un moment donné
+- Il protège les sections critiques du code (comme l'incrémentation de la variable count)
+- Empêche les conditions de concurrence où plusieurs threads modifient simultanément la même variable
+
+#### Barrière (dans test2.c)
+Une barrière est un point de synchronisation qui bloque l'exécution des threads jusqu'à ce qu'un nombre prédéfini de threads aient atteint ce point :
+
+- Tous les threads attendent à la barrière jusqu'à ce que le dernier l'atteigne
+- Quand le nombre requis de threads arrive, tous sont libérés simultanément
+- Permet de synchroniser des phases d'exécution entre threads
+
+#### Fonctionnement de test2.c avec la barrière
+Dans votre code test2.c :
+
+1. Vous créez 4 threads
+2. Chaque thread :
+- Dort pendant un temps aléatoire (entre 0 et 2 × id du thread secondes)
+- Arrive à la barrière et annonce qu'il attend les autres
+- S'arrête à pthread_barrier_wait(&barrier) jusqu'à ce que tous les threads soient arrivés
+- Affiche "Thread X awake" seulement après que tous les threads sont arrivés à la barrière
+
+La barrière a été initialisée avec le nombre 4 (pthread_barrier_init(&barrier, NULL, 4)), donc elle attend exactement 4 threads avant de les libérer tous.
+
+Le résultat est que tous les messages "Thread X awake" s'afficheront approximativement au même moment, après que même le thread le plus lent est arrivé à la barrière.
+
+Différence clé
+- Mutex : Protège l'accès à une ressource partagée (un à la fois)
+- Barrière : Synchronise l'exécution de plusieurs threads à un point précis (tous attendent tous).
+
+Les barrières sont utiles pour des algorithmes où tous les threads doivent compléter une phase avant que quiconque puisse passer à la suivante.
+
+# Barrières vs Mutex : Rôles différents
+
+Non, `pthread_barrier_t` ne remplace pas `pthread_mutex_t` et `pthread_mutex_lock()`. Ces deux mécanismes de synchronisation ont des objectifs et des utilisations très différents :
+
+## Mutex (`pthread_mutex_t`)
+- **Objectif** : Protéger l'accès exclusif à une ressource partagée
+- **Fonctionnement** : Permettre à un seul thread d'accéder à une section critique
+- **Utilisation typique** : Protection d'une variable partagée (comme votre compteur)
+- **Exemple dans votre code** :
+  ```c
+  pthread_mutex_lock(args->mutex);   // Verrouillage
+  args->count += counts;             // Accès exclusif à la ressource partagée
+  pthread_mutex_unlock(args->mutex); // Déverrouillage
+  ```
+
+## Barrière (`pthread_barrier_t`)
+- **Objectif** : Synchroniser plusieurs threads à un point précis
+- **Fonctionnement** : Bloquer tous les threads jusqu'à ce que N threads soient arrivés à la barrière
+- **Utilisation typique** : Coordonner des phases d'exécution entre threads
+- **Exemple** :
+  ```c
+  // Tous les threads attendent ici jusqu'à ce que N threads arrivent
+  pthread_barrier_wait(args->barrier);
+  // Tous continuent ensemble une fois que N threads sont arrivés
+  ```
+
+## Conclusion
+
+Les deux outils résolvent des problèmes différents :
+- **Mutex** : Résout le problème de l'exclusion mutuelle (un seul à la fois)
+- **Barrière** : Résout le problème de synchronisation de groupe (tous attendent tous)
+
+Ils sont complémentaires et souvent utilisés ensemble dans les programmes complexes : les mutex protègent les ressources partagées tandis que les barrières coordonnent des phases d'exécution.

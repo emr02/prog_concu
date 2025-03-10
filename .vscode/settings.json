@@ -3,6 +3,13 @@
         "dijkstra.h": "c",
         "shm.h": "c",
         "unistd.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "stdio.h": "c",
+        "ipc.h": "c",
+        "pthread.h": "c",
+        "string.h": "c",
+        "signal.h": "c",
+        "fcntl.h": "c",
+        "semaphore.h": "c"
     }
 }

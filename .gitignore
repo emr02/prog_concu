@@ -1,3 +1,46 @@
+# Compiled object files
 *.o
+*.ko
+*.elf
 
+# Executables
+*.exe
+*.out
+*.app
+
+# Precompiled headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects
+*.so
+*.so.*
+*.dylib
+*.dll
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Editor files
+*~
+.*.swp
+.*.swo
 .vscode/
+.idea/
+
+# Build directories
+build/
+Debug/
+Release/
+
+# Core dumps
+core

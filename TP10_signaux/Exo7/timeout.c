@@ -37,3 +37,29 @@ int main(void)
 
     return 0;
 }
+
+// int nb;
+// char c[100];
+// struct sigaction act;
+// memset(&act, 0, sizeof(act));
+// act.sa_handler = redirect;
+// sigaction(SIGALRM, &act, NULL);
+
+// puts("Entrez un entier en moins de 5 secondes");
+// alarm(5);
+
+// int reussi = 0;
+// while (!reussi) {
+//     puts("Svp un entier : ");
+//     if (fgets(c, sizeof(c), stdin) == NULL) {
+//         continue;  // En cas d'erreur de lecture, on réessaie
+//     }
+    
+//     reussi = sscanf(c, "%d", &nb);
+//     if (reussi == 1) {
+//         alarm(0);  // Désarmer l'alarme
+//         puts("Ok merci !!");
+//         break;
+//     }
+//     // Si la conversion a échoué, on continue la boucle
+// }

@@ -164,49 +164,68 @@ void flou(const char* filepath, const char* output_dir)
 }
 
 /*----- Zone à Modifier -----*/
-int current_index = 1;
-pthread_mutex_t mutex;
-char **arguments;
-int qte_args;
+struct structArg {
+    pthread_mutex_t* mutex;
+    char **arguments;
+    int qte_args;
+    int current_index;
+};
 
-void *calcflou(void *){
-	int local_index;
-	while (1)
-	{
-		//lock pour récupérer l'index
-		pthread_mutex_lock(&mutex);
-		local_index = current_index;
-		//vérifie si on a pas déjà tout fait et sort du thread si c'est le cas
-		if(current_index+1 == qte_args){
-			pthread_mutex_unlock(&mutex);
-			pthread_exit(0);
-		}
-		current_index++;
-		//unlock l'index
-		pthread_mutex_unlock(&mutex);
-		//appelle la fonction
-		flou(arguments[local_index], "sortie");
-	}
+void *calcflou(void *arg){
+    struct structArg* args = arg;
+    int local_index;
+    while (1)
+    {
+        //lock pour récupérer l'index
+        pthread_mutex_lock(args->mutex);
+        local_index = args->current_index;
+        //vérifie si on a pas déjà tout fait et sort du thread si c'est le cas
+        if(args->current_index >= args->qte_args){
+            pthread_mutex_unlock(args->mutex);
+            pthread_exit(0);
+        }
+        args->current_index++;
+        //unlock l'index
+        pthread_mutex_unlock(args->mutex);
+        //appelle la fonction
+        flou(args->arguments[local_index], "sortie");
+    }
 }
 /*----- Fin de Zone à Modifier -----*/
 int main(int argc, char* argv[])
 {
 
     /*----- Zone à Modifier -----*/
-	pthread_t thread[6];	
+    pthread_t thread[6];
+    pthread_mutex_t mutex;
     pthread_mutex_init(&mutex, NULL);
-	arguments = argv;
-	//on ne compte pas le premier argument
-	qte_args = argc-1;
+    
+    // Initialisation de la structure
+    struct structArg args;
+    args.mutex = &mutex;
+    args.arguments = argv;
+    args.qte_args = argc;
+    args.current_index = 1; // on ne compte pas le premier argument
 
-	//création des threads
-	for(int i = 0; i<6;i++){
-        pthread_create(&thread[i],NULL,calcflou,NULL);
+	//struct structArg args = {&mutex, argv, argc, 1};
+    
+    //création des threads
+    for(int i = 0; i<6; i++){
+        pthread_create(&thread[i], NULL, calcflou, &args);
     }
-	//attente des threads
-    for(int i = 0; i<6;i++){
+    //attente des threads
+    for(int i = 0; i<6; i++){
         pthread_join(thread[i], NULL);
     }
+    
+    // Destruction du mutex
+    pthread_mutex_destroy(&mutex);
+
+	/*for(int i = 1; i < argc; i++)
+    {
+        flou(argv[i],"sortie");
+    }*/
     /*----- Fin de Zone à Modifier -----*/
-	return 0;
+    return 0;
 }
+

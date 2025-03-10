@@ -24,14 +24,14 @@ void *rdv(void* arg){
     *argument->waiters = *argument->waiters+1;
 
     if(*argument->waiters == argument->total){
+        pthread_mutex_unlock(&argument->mutex);
         for(int i=0; i<argument->total-1;i++){
             sem_post(argument->sem);
         }
     }else{
+        pthread_mutex_unlock(&argument->mutex);
         sem_wait(argument->sem);
-    }
-    pthread_mutex_unlock(&argument->mutex);
-    
+    }    
     printf("%d wakeup\n", argument->n);
     return NULL;
 }
